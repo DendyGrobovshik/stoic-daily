@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
-    "baseUrl": ".",
+    "baseUrl": "src",
+    "outDir": "dist",
     "inlineSourceMap": true,
     "inlineSources": true,
     "module": "ESNext",
@@ -8,6 +9,7 @@
     "allowJs": true,
     "noImplicitAny": true,
     "moduleResolution": "node",
+    "resolveJsonModule": true,
     "importHelpers": true,
     "lib": [
       "dom",
@@ -17,6 +19,9 @@
     ]
   },
   "include": [
-    "**/*.ts"
+    "src/**/*.ts",
+  ],
+  "exclude": [
+    "dist"
   ]
 }

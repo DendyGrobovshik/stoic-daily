@@ -1,17 +1,25 @@
 {
-  "name": "obsidian-sample-plugin",
-  "version": "0.12.0",
-  "description": "This is a sample plugin for Obsidian (https://obsidian.md)",
-  "main": "main.js",
+  "name": "stoic-daily",
+  "version": "1.0.0-beta",
+  "description": "Obsidian plugin for taking daily notes (https://obsidian.md)",
+  "homepage": "https://github.com/DendyGrobovshik/stoic-daily",
+  "main": "dist/main.js",
   "scripts": {
     "dev": "rollup --config rollup.config.js -w",
     "build": "rollup --config rollup.config.js --environment BUILD:production"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "obsidian",
+    "notetaking",
+    "note",
+    "stoic",
+    "quotes"
+  ],
+  "author": "DendyGrobovshik",
   "license": "MIT",
   "devDependencies": {
     "@rollup/plugin-commonjs": "^18.0.0",
+    "@rollup/plugin-json": "^4.1.0",
     "@rollup/plugin-node-resolve": "^11.2.1",
     "@rollup/plugin-typescript": "^8.2.1",
     "@types/node": "^14.14.37",
