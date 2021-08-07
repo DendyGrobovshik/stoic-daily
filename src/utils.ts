@@ -63,7 +63,7 @@ const getTodayNotePath = (): string => {
     const year = nYear.toString();
     const month = MONTH_NAMES[nMonth - 1];
 
-    return path.join(ROOT_DIR, year, month);
+    return path.join(ROOT_DIR, `${month}${year}`);
 }
 
 const getTodayNoteFullPath = (): string => {
@@ -73,53 +73,38 @@ const getTodayNoteFullPath = (): string => {
 const getMonthNoteName = (): string => {
     const [nYear, nMonth] = getToday();
 
-    const year = nYear.toString();
-    const month = nMonth.toString().padStart(2, '0');
+    const month = MONTH_NAMES[nMonth - 1];
 
-    return `${year}${month}`;
+    return `${month}${nYear}`;
 }
 
 const getMonthNotePath = (): string => {
-    const [nYear] = getToday();
+    const [nYear, nMonth] = getToday();
 
     const year = nYear.toString();
+    const month = MONTH_NAMES[nMonth - 1];
 
-    return path.join(ROOT_DIR, year);
+    return path.join(ROOT_DIR, `${month}${year}`);
 }
 
 const getMonthNoteFullPath = (): string => {
     return path.join(getMonthNotePath(), `${getMonthNoteName()}.md`);
 }
 
-const getYearNoteName = (): string => {
-    const [nYear] = getToday();
-
-    const year = nYear.toString();
-
-    return `${year}`;
-}
-
-const getYearNotePath = (): string => {
+const getTemplateNotePath = (): string => {
     return path.join(ROOT_DIR);
 }
 
-const getYearNoteFullPath = (): string => {
-    return path.join(getYearNotePath(), `${getYearNoteName()}.md`);
+const getTemplateNoteFullPath = (): string => {
+    return path.join(getTemplateNotePath(), 'TEMPLATE.md');
 }
 
 export {
-    getRandomQuote,
-    getRandomPractice,
+    getRandomQuote, getRandomPractice,
 
-    getTodayNoteName,
-    getTodayNotePath,
-    getTodayNoteFullPath,
+    getTodayNoteName, getTodayNotePath, getTodayNoteFullPath,
 
-    getMonthNoteName,
-    getMonthNotePath,
-    getMonthNoteFullPath,
+    getMonthNoteName, getMonthNotePath, getMonthNoteFullPath,
 
-    getYearNoteName,
-    getYearNotePath,
-    getYearNoteFullPath,
+    getTemplateNotePath, getTemplateNoteFullPath,
 }

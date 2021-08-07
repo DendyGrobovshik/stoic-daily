@@ -1,6 +1,6 @@
 {
   "name": "stoic-daily",
-  "version": "1.0.0-beta",
+  "version": "1.0.0",
   "description": "Obsidian plugin for taking daily notes (https://obsidian.md)",
   "homepage": "https://github.com/DendyGrobovshik/stoic-daily",
   "main": "dist/main.js",

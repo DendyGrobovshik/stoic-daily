@@ -1,7 +1,7 @@
 {
     "id": "stoic-daily",
     "name": "Stoic Daily",
-    "version": "1.0.0-beta",
+    "version": "1.0.0",
     "minAppVersion": "0.9.12",
     "description": "Obsidian plugin for taking daily notes",
     "author": "DendyGrobovshik",

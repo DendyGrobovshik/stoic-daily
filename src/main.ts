@@ -1,236 +1,126 @@
 import {
-    App,
     Plugin,
-    PluginSettingTab,
-    Setting,
+    TFile,
 } from 'obsidian';
 
 import {
-    getRandomQuote,
+    getRandomQuote, getRandomPractice,
 
     getTodayNotePath, getTodayNoteFullPath,
 
     getMonthNoteName, getMonthNotePath, getMonthNoteFullPath,
 
-    getYearNoteName, getYearNotePath, getYearNoteFullPath, getRandomPractice,
+    getTemplateNotePath, getTemplateNoteFullPath,
 } from 'utils';
 
-const EMPTY_LINE = [''];
-const DELIMETER = ['---'];
-
-interface StoicDailySetting {
-    name: string;
-    description: string;
-    value: boolean;
+const getBaseTemplate = (): string => {
+    return [
+        '%META%',
+        '%MONTH_LINK%',
+        '',
+        '%QUOTE%',
+        '',
+        '---',
+        '# Morning notes',
+        '',
+        '---',
+        '# Evening notes',
+        '',
+        '---',
+        '%PRACTICE%',
+    ].join('\n');
 }
 
-interface StoicDailySettings {
-    showQuote: StoicDailySetting,
-    showMorningNote: StoicDailySetting,
-    showEveningNote: StoicDailySetting,
-    showPractice: StoicDailySetting,
-}
-
-const DEFAULT_SETTINGS: StoicDailySettings = {
-    showQuote: {
-        name: 'Show Quote',
-        description: 'Display stoic quote',
-        value: true,
-    },
-    showMorningNote: {
-        name: 'Show Morning Note',
-        description: 'Display title for morning note',
-        value: true,
-    },
-    showEveningNote: {
-        name: 'Show Evening Note',
-        description: 'Display title for evening note',
-        value: true,
-    },
-    showPractice: {
-        name: 'Show Practice',
-        description: 'Display stoic practice',
-        value: true,
-    },
-}
-
-const getMetaData = (): string[] => {
+const getMetaData = (): string => {
     return [
         '---',
         'tags: daily',
         '---',
-    ];
+    ].join('\n');
 }
 
-const getQuote = (): string[] => {
+const getQuote = (): string => {
     const { text, author } = getRandomQuote();
 
     return [
+        `# Today Quote`,
         `> ${text}`,
         `\\- ${author}`,
-    ];
+    ].join('\n');
 }
 
-const getMorningNotes = (): string[] => {
-    return [
-        '# Morning Notes',
-        '- Today I will ...',
-    ]
-}
-
-const getEveningNotes = (): string[] => {
-    return [
-        '# Evening Notes',
-        '- This day was ...',
-    ]
-}
-
-const getPractice = (): string[] => {
+const getPractice = (): string => {
     const { text } = getRandomPractice();
 
     return [
         `# Today Practice`,
         `> ${text}`,
-    ];
-}
-
-
-const getTodayNoteText = (plugin: StoicDailyPlugin): string => {
-    const { settings } = plugin;
-
-    const metaData = getMetaData();
-    const quote = settings.showQuote.value ? [
-        ...getQuote(),
-        ...EMPTY_LINE,
-        ...DELIMETER,
-    ] : [];
-    const morningNotes = settings.showMorningNote.value ? [
-        ...getMorningNotes(),
-        ...DELIMETER,
-
-    ] : [];
-    const eveningNotes = settings.showEveningNote.value ? [
-        ...getEveningNotes(),
-        ...DELIMETER,
-    ] : [];
-    const practice = settings.showPractice.value ? [
-        ...getPractice(),
-    ] : [];
-
-    return [
-        ...metaData,
-        `Month: [[${getMonthNoteName()}]]`,
-        ...EMPTY_LINE,
-        ...quote,
-        ...morningNotes,
-        ...eveningNotes,
-        ...practice,
-    ].join('\n'); // TODO
+    ].join('\n');
 }
 
 const getMonthNoteText = (): string => {
     const metaData = getMetaData();
 
     return [
-        ...metaData,
-        `Year: [[${getYearNoteName()}]]`,
-        ...EMPTY_LINE,
+        metaData,
+        '',
         '# The result of a stoic month',
     ].join('\n');
 }
 
-const getYearNoteText = (): string => {
-    const metaData = getMetaData();
-
-    return [
-        ...metaData,
-        ...EMPTY_LINE,
-        '# The result of a stoic year',
-    ].join('\n');
-}
-
-// Do not rewrite note if it exists
-const createNote = async (
-    dirPath: string,
-    filePath: string,
-    text: string,
-    plugin: StoicDailyPlugin,
-): Promise<void> => {
-    const { vault } = plugin.app;
-
-    // Create folder
-    if (!await vault.adapter.exists(dirPath)) {
-        await vault.createFolder(dirPath);
-    }
-    // Create file
-    if (!await vault.adapter.exists(filePath)) {
-        const file = await vault.create(filePath, text);
+const parseCommand = (command: string): string => {
+    switch (command) {
+        case 'META':
+            return getMetaData();
+            break;
+        case 'MONTH_LINK':
+            return `Month: [[${getMonthNoteName()}]]`;
+            break;
+        case 'QUOTE':
+            return getQuote();
+            break;
+        case 'PRACTICE':
+            return getPractice();
+            break;
+        default: break;
     }
 }
 
-const openNote = async (
-    filePath: string,
-    plugin: StoicDailyPlugin
-): Promise<void> => {
-    const { vault, workspace } = plugin.app;
+const createTextFromTemplate = (template: string): string => {
+    let result = '';
 
-    let note;
-    vault.getFiles().forEach(file => {
-        if (file.path === filePath) {
-            note = file;
+    for (let i = 0; i < template.length; i++) {
+        const char = template[i];
+
+        if (char === '%') {
+            let command = '';
+            while (template[++i] !== '%') {
+                command += template[i];
+            }
+
+            result += parseCommand(command);
+        } else {
+            result += char;
         }
-    });
+    }
 
-    await workspace.activeLeaf.openFile(note);
-}
-
-const createAndOpenTodayNote = async (plugin: StoicDailyPlugin): Promise<void> => {
-    createYearNote(plugin);
-    createMonthNote(plugin);
-
-    const dirPath = getTodayNotePath();
-    const filePath = getTodayNoteFullPath();
-
-    await createNote(dirPath, filePath, getTodayNoteText(plugin), plugin);
-    await openNote(filePath, plugin);
-}
-
-const createMonthNote = async (plugin: StoicDailyPlugin): Promise<void> => {
-    const dirPath = getMonthNotePath();
-    const filePath = getMonthNoteFullPath();
-
-    createNote(dirPath, filePath, getMonthNoteText(), plugin);
-}
-
-const createYearNote = async (plugin: StoicDailyPlugin): Promise<void> => {
-    const dirPath = getYearNotePath();
-    const filePath = getYearNoteFullPath();
-
-    createNote(dirPath, filePath, getYearNoteText(), plugin);
+    return result;
 }
 
 export default class StoicDailyPlugin extends Plugin {
-    settings: StoicDailySettings;
-
     async onload() {
-        await this.loadSettings();
-
         this.addCommands();
 
-        this.addSettingTab(new SampleSettingTab(this.app, this));
-
-        createAndOpenTodayNote(this);
-        this.registerInterval(window.setInterval(
-            () => createAndOpenTodayNote(this), 1000 * 60 * 1)
-        );
+        await this.createBaseTemplate();
     }
 
     addCommands() {
         this.addCommand({
             id: 'open-daily-note',
             name: 'Open Daily Note',
-            callback: () => {
-                createAndOpenTodayNote(this);
+            callback: async () => {
+                await this.createBaseTemplate();
+                await this.createAndOpenTodayNote();
             }, hotkeys: [
                 {
                     modifiers: ["Ctrl"],
@@ -238,44 +128,70 @@ export default class StoicDailyPlugin extends Plugin {
                 }
             ],
         });
-
     }
 
-    async loadSettings() {
-        this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+    getNote(filePath: string): TFile {
+        let note;
+
+        this.app.vault.getFiles().forEach(file => {
+            if (file.path === filePath) {
+                note = file;
+            }
+        });
+
+        return note;
     }
 
-    async saveSettings() {
-        await this.saveData(this.settings);
-    }
-}
+    // Do not rewrite note if it exists
+    async createNote(dirPath: string, filePath: string, text: string): Promise<void> {
+        const { vault } = this.app;
 
-class SampleSettingTab extends PluginSettingTab {
-    plugin: StoicDailyPlugin;
-
-    constructor(app: App, plugin: StoicDailyPlugin) {
-        super(app, plugin);
-        this.plugin = plugin;
-    }
-
-    display(): void {
-        let { containerEl } = this;
-        const { settings } = this.plugin;
-
-        containerEl.empty();
-
-        containerEl.createEl('h2', { text: 'Stoic Daily plugin settings.' });
-
-        for (const setting of Object.values(settings)) {
-            new Setting(containerEl)
-                .setName(setting.name)
-                .setDesc(setting.description)
-                .addToggle(toggle => toggle
-                    .setValue(setting.value)
-                    .onChange(async (value) => {
-                        setting.value = value;
-                        await this.plugin.saveSettings();
-                    }));
+        // Create folder
+        if (!await vault.adapter.exists(dirPath)) {
+            await vault.createFolder(dirPath);
         }
+        // Create file
+        if (!await vault.adapter.exists(filePath)) {
+            const file = await vault.create(filePath, text);
+        }
+    }
+
+    async openNote(filePath: string): Promise<void> {
+        const note = this.getNote(filePath);
+
+        await this.app.workspace.activeLeaf.openFile(note);
+    }
+
+    async createBaseTemplate(): Promise<void> {
+        await this.createNote(
+            getTemplateNotePath(), getTemplateNoteFullPath(), getBaseTemplate()
+        );
+    }
+
+    async createTodayNote(): Promise<void> {
+        await this.createMonthNote();
+
+        const dirPath = getTodayNotePath();
+        const filePath = getTodayNoteFullPath();
+
+        const templateNote = this.getNote(getTemplateNoteFullPath());
+        const template = await this.app.vault.read(templateNote);
+        const text = createTextFromTemplate(template);
+
+        await this.createNote(dirPath, filePath, text);
+    }
+
+    async createAndOpenTodayNote(): Promise<void> {
+        const filePath = getTodayNoteFullPath();
+
+        await this.createTodayNote();
+        await this.openNote(filePath);
+    }
+
+    async createMonthNote(): Promise<void> {
+        const dirPath = getMonthNotePath();
+        const filePath = getMonthNoteFullPath();
+
+        await this.createNote(dirPath, filePath, getMonthNoteText());
     }
 }
