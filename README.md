@@ -1,6 +1,6 @@
 # Stoic Daily Plugin
 
-### The plugin creates a daily note for **Morning and evening reflection** accompanied by the **quote of the day** and **practice**.
+The plugin creates a daily note for **morning and evening reflection** accompanied by the **quote of the day** and **practice**.
 
 ## How o use
 - Edit the template `stoic-daily/TEMPLATE.md`
